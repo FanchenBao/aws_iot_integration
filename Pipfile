@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-awsiotpythonsdk = "*"
+AWSIoTPythonSDK = "*"
 boto3 = "*"
 
 [dev-packages]
@@ -12,6 +12,7 @@ wemake-python-styleguide = "*"
 pyformat = "*"
 mypy = "*"
 isort = "<5.0"
+pre-commit = "*"
 
 [requires]
 python_version = "3.7"

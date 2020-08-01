@@ -1,0 +1,46 @@
+default_language_version:
+    python: python3.7
+default_stages: [commit]
+repos:
+-   repo: local
+    hooks:
+    -   id: pyformat
+        name: pyformat
+        description: Formats Python code to follow a consistent style
+        entry: pyformat
+        args: ["-i", "-r", "-a", "-v"]
+        language: python
+        types: [python]
+    -   id: flake8
+        name: flake8
+        description: Python style guide enforcement
+        entry: flake8
+        args: ["--config=setup.cfg"]
+        language: python
+        types: [python]
+    -   id: mypy
+        name: mypy
+        description: Python type checking
+        entry: mypy
+        args: []
+        language: python
+        types: [python]
+    -   id: isort
+        name: isort
+        description: Sort Python import
+        entry: isort
+        args: ["--recursive"]
+        language: python
+        types: [python]
+-   repo: https://github.com/asottile/seed-isort-config
+    rev: v1.9.3
+    hooks:
+    -   id: seed-isort-config
+-   repo: https://github.com/asottile/add-trailing-comma
+    rev: v1.5.0
+    hooks:
+    -   id: add-trailing-comma
+-   repo: https://github.com/andreoliwa/nitpick
+    rev: v0.21.2
+    hooks:
+      - id: nitpick
