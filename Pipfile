@@ -1,0 +1,17 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+awsiotpythonsdk = "*"
+boto3 = "*"
+
+[dev-packages]
+wemake-python-styleguide = "*"
+pyformat = "*"
+mypy = "*"
+isort = "<5.0"
+
+[requires]
+python_version = "3.7"
