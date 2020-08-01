@@ -3,6 +3,7 @@
 from pydantic import BaseSettings
 
 from pathlib import Path
+from typing import Dict
 
 # DEFAULT
 ROOT_DIR: Path = Path(__file__).parent.absolute()
@@ -25,6 +26,19 @@ class Settings(BaseSettings):
     # default environment is TEST
     env: str = TEST
 
+    # AWS IoT config
+    sensor_name: str = PLACEHOLDER
+    endpoint: str = PLACEHOLDER
+    port: int = 8883
+    root_ca: str = 'Amazon_Root_CA_1.pem'  # Root CA file name
+    upload_private_key: str = PLACEHOLDER
+    upload_cert_file: str = PLACEHOLDER
+    remote_private_key: str = PLACEHOLDER
+    remote_cert_file: str = PLACEHOLDER
+    # For use in aww_iot_client_wrapper.py
+    private_key: Dict = {}
+    cert_file: Dict = {}
+
     class Config(object):
         """Configuration for settings."""
 
@@ -32,3 +46,8 @@ class Settings(BaseSettings):
 
 
 settings = Settings()  # instantiate global settings
+# Set up credentials
+settings.private_key['UPLOAD'] = settings.upload_private_key
+settings.private_key['REMOTE'] = settings.remote_private_key
+settings.cert_file['UPLOAD'] = settings.upload_cert_file
+settings.cert_file['REMOTE'] = settings.remote_cert_file
