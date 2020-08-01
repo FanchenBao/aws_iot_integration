@@ -41,6 +41,6 @@ repos:
     hooks:
     -   id: add-trailing-comma
 -   repo: https://github.com/andreoliwa/nitpick
-    rev: v0.21.2
+    rev: v0.22.2
     hooks:
       - id: nitpick
