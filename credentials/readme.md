@@ -1,0 +1,2 @@
+# Important Note
+This folder contains all the credentials used for integrating the IoT device with AWS IoT. **Under NO circumstances shall the credential files in this folder be uploaded to any online repo.**

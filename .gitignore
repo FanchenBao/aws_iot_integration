@@ -150,3 +150,14 @@ dmypy.json
 .history
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,python
+
+
+# Custom ignore
+
+## ignore .env file
+.env
+
+## ignore credentials
+**/*.pem
+**/*.pem.crt
+**/*.pem.key
