@@ -39,8 +39,11 @@ class Settings(BaseSettings):
     private_key: Dict = {}
     cert_file: Dict = {}
     # MQTT topics
-    upload_topic = PLACEHOLDER
-    remote_topic = PLACEHOLDER
+    upload_topic: str = PLACEHOLDER
+    remote_topic: str = PLACEHOLDER
+
+    # Main program config
+    total_iterations: int = 5  # the number of seconds the main program runs
 
     class Config(object):
         """Configuration for settings."""
