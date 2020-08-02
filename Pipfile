@@ -6,7 +6,6 @@ name = "pypi"
 [packages]
 AWSIoTPythonSDK = "*"
 boto3 = "*"
-pydantic = "*"
 
 [dev-packages]
 wemake-python-styleguide = "*"
@@ -17,3 +16,6 @@ pre-commit = "*"
 
 [requires]
 python_version = "3.7"
+
+[packages.pydantic]
+extras = [ "dotenv",]

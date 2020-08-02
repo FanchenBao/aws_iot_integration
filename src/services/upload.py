@@ -2,7 +2,7 @@
 
 import logging
 from config import settings
-from src.aws.aws import AWSIoTMQTTClientWrapper
+from src.aws.aws_iot_client_wrapper import AWSIoTMQTTClientWrapper
 
 # set up logger
 logger = logging.getLogger(__name__)

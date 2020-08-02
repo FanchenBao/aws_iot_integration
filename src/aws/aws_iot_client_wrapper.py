@@ -66,9 +66,7 @@ class AWSIoTMQTTClientWrapper(object):
 
     def connect(self) -> None:
         """Connect MQTT client."""
-        if self._online:
-            logger.info(f'{self.thing_name} already connected to MQTT client.')
-        else:
+        if not self._online:
             logger.info(f'Connecting {self.thing_name} to MQTT client...')
             self.myShadowClient.connect()
 
@@ -77,10 +75,6 @@ class AWSIoTMQTTClientWrapper(object):
         if self._online:
             logger.info(f'Disconnecting {self.thing_name} from MQTT client.')
             self.myShadowClient.disconnect()
-        else:
-            logger.info(
-                f'{self.thing_name} already disconnected from MQTT client.',
-            )
 
     def send(self, topic: str, msg: str) -> bool:
         """A wrapper function for MQTT publish.
