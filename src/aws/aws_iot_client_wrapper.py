@@ -5,6 +5,7 @@ from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTShadowClient
 import logging
 from config import ROOT_DIR, settings
 from pathlib import Path
+from src.errors.network_connection_error import NoInternetError
 
 # set up logger
 logger = logging.getLogger(__name__)
@@ -65,39 +66,46 @@ class AWSIoTMQTTClientWrapper(object):
 
     def connect(self) -> None:
         """Connect MQTT client."""
-        if not self._online:
-            try:
-                self.myShadowClient.connect()
-            except Exception:
-                logger.exception('Failed to CONNECT to MQTT client')
+        if self._online:
+            logger.info(f'{self.thing_name} already connected to MQTT client.')
+        else:
+            logger.info(f'Connecting {self.thing_name} to MQTT client...')
+            self.myShadowClient.connect()
 
     def disconnect(self) -> None:
         """Disconnect MQTT client."""
         if self._online:
-            try:
-                self.myShadowClient.disconnect()
-            except Exception:
-                logger.exception('Failed to DISCONNECT from MQTT client')
+            logger.info(f'Disconnecting {self.thing_name} from MQTT client.')
+            self.myShadowClient.disconnect()
+        else:
+            logger.info(
+                f'{self.thing_name} already disconnected from MQTT client.',
+            )
 
-    def send(self, topic, msg) -> bool:
+    def send(self, topic: str, msg: str) -> bool:
         """A wrapper function for MQTT publish.
 
         It provides its own error message and explicitly checks whether the
         client is online.
 
-        :param topic:   Topic to be published on.
-        :param msg:     Message to be published.
-        :return: True if publishing succeeds, else False.
+        :param topic: Topic to be published on.
+        :type topic: str
+        :param msg: Message to be published.
+        :type msg: str
+        :raises NoInternetError: Publish message failed due to No Internet
+            connection.
+        :return: True if message has been sent to paho, the underlying package
+            that handles message transmission over MQTT, else False. Note that
+            the return value does NOT suggest if the message has been actually
+            published to the topic.
+        :rtype: bool
         """
         self.connect()
         if self._online:
-            try:
-                return self.myAWSIoTMQTTClient.publish(topic, msg, 1)
-            except Exception:
-                logger.exception(f'Publish to "{topic}" FAILED!')
-        else:
-            logger.error('MQTT Client offline. Cannot publish message')
-        return False
+            return self.myAWSIoTMQTTClient.publish(topic, msg, 1)
+        raise NoInternetError(
+            f'Cannot publish to topic {topic} due to NO Internet connection.',
+        )
 
     # Callbacks
     def _my_online_callback(self) -> None:

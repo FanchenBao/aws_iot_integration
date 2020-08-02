@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     # For use in aww_iot_client_wrapper.py
     private_key: Dict = {}
     cert_file: Dict = {}
+    # MQTT topics
+    upload_topic = PLACEHOLDER
+    remote_topic = PLACEHOLDER
 
     class Config(object):
         """Configuration for settings."""
