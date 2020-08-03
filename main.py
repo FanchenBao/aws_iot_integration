@@ -5,10 +5,10 @@ import logging
 from config import settings
 from multiprocessing import Queue
 from src.child_processes.child_processes import ChildProcesses
+from src.clients.upload import Upload
 from src.errors.network_connection_error import NoInternetError
 from src.logger.logger_config import queue_logger_config
 from src.logger.ouput import output_process
-from src.services.upload import Upload
 from src.vehicle_detector.detect_vehicle import detect_vehicle
 from time import time
 from typing import Dict
