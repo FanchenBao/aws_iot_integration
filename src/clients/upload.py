@@ -28,4 +28,4 @@ class Upload(AWSIoTMQTTClientWrapper):
             string, which means self._topic will be used.
         """
         topic: str = self._topic if custom_topic == '' else custom_topic
-        self.send(topic, msg)
+        self.send(msg, topic)

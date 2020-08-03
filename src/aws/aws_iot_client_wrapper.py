@@ -76,16 +76,16 @@ class AWSIoTMQTTClientWrapper(object):
             logger.info(f'Disconnecting {self.thing_name} from MQTT client.')
             self.myShadowClient.disconnect()
 
-    def send(self, topic: str, msg: str) -> bool:
+    def send(self, msg: str, topic: str) -> bool:
         """A wrapper function for MQTT publish.
 
         It provides its own error message and explicitly checks whether the
         client is online.
 
-        :param topic: Topic to be published on.
-        :type topic: str
         :param msg: Message to be published.
         :type msg: str
+        :param topic: Topic to be published on.
+        :type topic: str
         :raises NoInternetError: Publish message failed due to No Internet
             connection.
         :return: True if message has been sent to paho, the underlying package
