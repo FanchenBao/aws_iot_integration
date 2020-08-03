@@ -4,7 +4,7 @@ from random import randint
 
 import logging
 from multiprocessing import Queue
-from time import sleep
+from time import sleep, time
 
 # set up logging
 logger = logging.getLogger(__name__)
@@ -31,6 +31,9 @@ def detect_vehicle(data_q: Queue, term_event) -> None:
         logger.info(
             f'Vehicle detected! Current number of vehicles: {num_vehicles}',
         )
-        data_q.put(num_vehicles)
+        data_q.put({
+            'timestamp': int(time() * 1000),  # epoch milisecond
+            'cur_vehicle_count': num_vehicles,  # block get
+        })
         sleep(randint(1, 5))
     logger.info('Vehicle detection terminated.')

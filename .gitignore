@@ -161,3 +161,7 @@ dmypy.json
 **/*.pem
 **/*.pem.crt
 **/*.pem.key
+
+## ignore all log files
+**/*.log
+**/*.log.*

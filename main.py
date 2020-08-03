@@ -10,7 +10,6 @@ from src.errors.network_connection_error import NoInternetError
 from src.logger.logger_config import queue_logger_config
 from src.logger.ouput import output_process
 from src.vehicle_detector.detect_vehicle import detect_vehicle
-from time import time
 from typing import Dict
 
 # setup root logger for main
@@ -32,10 +31,7 @@ def run_session(upload: Upload, data_q: Queue) -> None:
     """
     iteration: int = 0
     while iteration < settings.total_iterations:
-        payload: Dict = {
-            'timestamp': int(time() * 1000),  # epoch milisecond
-            'cur_vehicle_count': data_q.get(),  # block get
-        }
+        payload: Dict = data_q.get()  # block get
         logger.info(
             f'Publishing data to topic {settings.upload_topic}...',
         )
