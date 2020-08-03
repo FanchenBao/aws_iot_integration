@@ -3,34 +3,33 @@
 import json
 import logging
 from config import settings
-from multiprocessing import Event, Process, Queue
+from multiprocessing import Queue
+from src.child_processes.child_processes import ChildProcesses
 from src.errors.network_connection_error import NoInternetError
+from src.logger.logger_config import queue_logger_config
+from src.logger.ouput import output_process
 from src.services.upload import Upload
 from src.vehicle_detector.detect_vehicle import detect_vehicle
 from time import time
 from typing import Dict
 
-# set up logger
+# setup root logger for main
 logger = logging.getLogger()
-console_handler = logging.StreamHandler()
-formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-)
-console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
-logger.setLevel(logging.INFO)
 
 
-def main() -> None:
-    """Main entry to the program."""
-    upload: Upload = Upload()  # data upload to AWS IoT
-    data_q: Queue[int] = Queue()
-    term_event = Event()
-    detector_process: Process = Process(
-        target=detect_vehicle,
-        args=(data_q, term_event),
-    )
-    detector_process.start()
+def run_session(upload: Upload, data_q: Queue) -> None:
+    """Run a sensor session.
+
+    This session creates a payload, and uploads it to AWS IoT. The duration of
+    the session is determined by the total number of times data are uploaded,
+    which is a param specified in the settings.
+
+    :param upload: An Upload service instance to upload data to AWS IoT.
+    :type upload: Upload
+    :param data_q: The queue that connects the sensor process to the main
+        process.
+    :type data_q: Queue
+    """
     iteration: int = 0
     while iteration < settings.total_iterations:
         payload: Dict = {
@@ -38,16 +37,32 @@ def main() -> None:
             'cur_vehicle_count': data_q.get(),  # block get
         }
         logger.info(
-            f'Publishing data {payload} to topic {settings.upload_topic}...',
+            f'Publishing data to topic {settings.upload_topic}...',
         )
         try:
             upload.upload_msg(json.dumps(payload))
         except (NoInternetError, Exception):
             logger.exception('Publish data failed.')
         iteration += 1
-    term_event.set()  # gracefully terminate detector_process
-    detector_process.join()
+
+
+def main() -> None:
+    """Main entry to the program."""
+    cp: ChildProcesses = ChildProcesses()
+    data_q: Queue = Queue()
+    logger_q: Queue = Queue()
+
+    # For output loggers
+    cp.create_and_start('output_logger', output_process, logger_q)
+    # For passing log from everywhere in the program to the logging output.
+    queue_logger_config(logger, logger_q)
+
+    cp.create_and_start('detect_vehicle', detect_vehicle, data_q)
+    run_session(Upload(), data_q)
     logger.info('Program ended')
+
+    cp.terminate('detect_vehicle')
+    cp.terminate('output_logger')
 
 
 if __name__ == '__main__':
