@@ -31,7 +31,7 @@ def execute_command(cmd: str, thing_name: str) -> Tuple[Tuple, Dict]:
     try:
         output: str = dict(COMMAND_DICTS).get(
             cmd,
-            lambda: f'Error! Command "{cmd}"" not recognized.',
+            lambda: f'Error! Command "{cmd}" not recognized.',
         )()
     except Exception as err:
         logger.exception(f'Execute command "{cmd}" failed.')
