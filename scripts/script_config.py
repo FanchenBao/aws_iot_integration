@@ -28,8 +28,6 @@ class ScriptSettings(object):
 
         Different lambda function results in different environment variables.
 
-        :param env: The environment indicator, one of these three: test, dev,
-                    and prod.
         :return: The environment variables as a dict.
         """
         return {

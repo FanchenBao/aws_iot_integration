@@ -58,6 +58,15 @@ def get_argument_parser() -> ArgumentParser:  # pragma no cover
         ),
     )
     parser.add_argument(
+        '--timeout',
+        dest='timeout',
+        type=int,
+        required=True,
+        help=(
+            'REQUIRED. Timeout limit for the lambda function in seconds.'
+        ),
+    )
+    parser.add_argument(
         '--description',
         dest='description',
         type=str,
@@ -126,7 +135,7 @@ def upload_code(args, env_variables: Dict) -> None:
             Environment={
                 'Variables': env_variables,
             },
-            Timeout=70,  # 70 seconds
+            Timeout=args.timeout,
         )
     except Exception:
         exception_handler('Update lambda function configuration FAILED.')
