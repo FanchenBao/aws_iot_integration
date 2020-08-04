@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from AWSIoTPythonSDK.core.jobs.thingJobManager import (
-    jobExecutionStatus,
     jobExecutionTopicReplyType,
     jobExecutionTopicType,
 )
@@ -10,27 +9,13 @@ from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTThingJobsClient
 import json
 import logging
 import threading
-from config import settings
 from src.aws.aws_iot_client_wrapper import AWSIoTMQTTClientWrapper
+from src.remote_control.command import execute_command
 from time import time
 from typing import Dict, Tuple
 
 # set up logger
 logger = logging.getLogger(__name__)
-
-
-def register_command() -> Dict:
-    """Provide a dictionary of commands that the IoT device can execute.
-
-    The commands are the keys of the dictionary, and the function to call is
-    the value.
-
-    :return: A dictionary of commands.
-    :rtype: Dict
-    """
-    return {
-        'version': lambda: settings.version,
-    }
 
 
 class Remote(AWSIoTMQTTClientWrapper):
@@ -48,15 +33,14 @@ class Remote(AWSIoTMQTTClientWrapper):
             thingName=self.thing_name,
             awsIoTMQTTClient=self.myAWSIoTMQTTClient,
         )
-        self.commands: Dict = register_command()  # all available commands
         self.cmd: str = ''  # received command.
-        # job status to be updated after job execution.
-        self.job_status: Tuple = ()
+        self.status: Tuple = ()  # job status to be updated.
+
         self.connect()
         self._subscribe()
 
     def _subscribe(self):
-        """Subscribe to all relevant channels.
+        """Subscribe to all relevant topics.
 
         Code is adapted from
         https://github.com/aws/aws-iot-device-sdk-python/blob/master/samples/jobs/jobsSample.py
@@ -155,32 +139,22 @@ class Remote(AWSIoTMQTTClientWrapper):
         if execution:
             self.cmd = execution['jobDocument']['cmd']
             logger.info(f'Recieved command "{self.cmd}", executing now...')
-            output: str = self.commands.get(
+            status, status_detail = execute_command(
                 self.cmd,
-                lambda: f'Error! {self.cmd} not recognized.',
-            )()
-            logger.info(
-                f'Result after command "{self.cmd}" is executed: {output}',
+                self.thing_name,
             )
-            statusDetails = {
-                'handledBy': self.thing_name,
-                'handledTime': int(time() * 1000),
-                'output': output,
-            }
-            if 'error' in output.lower():
-                self.status = jobExecutionStatus.JOB_EXECUTION_FAILED
-            else:
-                self.status = jobExecutionStatus.JOB_EXECUTION_SUCCEEDED
+            logger.info(f'Execution result: {status_detail["output"]}')
             threading.Thread(
                 target=self.job_client.sendJobsUpdate,
                 kwargs={
                     'jobId': execution['jobId'],
-                    'status': self.status,
-                    'statusDetails': statusDetails,
+                    'status': status,
+                    'statusDetails': status_detail,
                     'expectedVersion': execution['versionNumber'],
                     'executionNumber': execution['executionNumber'],
                 },
             ).start()
+            self.status = status
         else:
             logger.debug('No execution in next job to start')
 

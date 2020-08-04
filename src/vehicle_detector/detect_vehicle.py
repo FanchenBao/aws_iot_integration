@@ -26,6 +26,7 @@ def detect_vehicle(data_q: Queue, term_event) -> None:
     :type term_event: multiprocessing.Event
     """
     num_vehicles: int = 0
+    random_sleep = (10, 30)
     while not term_event.is_set():
         num_vehicles += 1
         logger.info(
@@ -35,5 +36,5 @@ def detect_vehicle(data_q: Queue, term_event) -> None:
             'timestamp': int(time() * 1000),  # epoch milisecond
             'cur_vehicle_count': num_vehicles,  # block get
         })
-        sleep(randint(1, 5))
+        sleep(randint(*random_sleep))
     logger.info('Vehicle detection terminated.')
