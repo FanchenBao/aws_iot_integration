@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     # Main program config
     total_iterations: int = 5  # the number of seconds the main program runs
     debug: bool = False
+    version: str = '0.0.1'
 
     class Config(object):
         """Configuration for settings."""
