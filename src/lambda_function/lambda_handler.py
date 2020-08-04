@@ -61,13 +61,19 @@ def get_job_id(thing_name: str, status: str):
     """
     next_t: str = 'dummy'
     while next_t:
-        resp: Dict = client.list_job_executions_for_thing(
-            thingName=thing_name,
-            status=status,
-            nextToken=next_t,
-        )
+        if next_t == 'dummy':
+            resp: Dict = client.list_job_executions_for_thing(
+                thingName=thing_name,
+                status=status,
+            )
+        else:
+            resp = client.list_job_executions_for_thing(
+                thingName=thing_name,
+                status=status,
+                nextToken=next_t,
+            )
         yield from (job['jobId'] for job in resp['executionSummaries'])
-        next_t = resp['nextToken']
+        next_t = resp.get('nextToken', '')
 
 
 def delete_unfinished_jobs(thing_name: str) -> None:
@@ -113,10 +119,15 @@ def poll_job(job_id: str, thing_name: str) -> Tuple[str, str]:
     :rtype: Tuple[str, str]
     """
     while True:
-        resp: Dict = client.describe_job_execution(
-            jobId=job_id,
-            thingName=thing_name,
-        )
+        try:
+            resp: Dict = client.describe_job_execution(
+                jobId=job_id,
+                thingName=thing_name,
+            )
+        except client.exceptions.ResourceNotFoundException:
+            # job hasn't been fully created yet.
+            sleep(1)
+            continue
         if resp['execution']['status'] in {'IN_PROGRESS', 'QUEUED'}:
             sleep(1)
         else:
@@ -149,7 +160,7 @@ def lambda_handler(event: Dict, context) -> Dict:
         logger.exception(error_msg)
         return error_response(f'{error_msg}. Exception: {err1}', SERVER_ERR)
 
-    job_id: str = f'{cmd}-{uuid.uuid3(uuid.NAMESPACE_DNS, "spottparking.com")}'
+    job_id: str = f'{cmd}-{uuid.uuid4()}'
 
     try:
         client.create_job(
