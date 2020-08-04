@@ -64,7 +64,7 @@ def get_job_id(thing_name: str, status: str):
         resp: Dict = client.list_job_executions_for_thing(
             thingName=thing_name,
             status=status,
-            nextToken=None if next_t == 'dummy' else next_t,
+            nextToken=next_t,
         )
         yield from (job['jobId'] for job in resp['executionSummaries'])
         next_t = resp['nextToken']
