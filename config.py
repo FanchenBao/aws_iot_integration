@@ -40,7 +40,6 @@ class Settings(BaseSettings):
     cert_file: Dict = {}
     # MQTT topics
     upload_topic: str = PLACEHOLDER
-    remote_topic: str = PLACEHOLDER
 
     # Main program config
     total_iterations: int = 5  # the number of seconds the main program runs
