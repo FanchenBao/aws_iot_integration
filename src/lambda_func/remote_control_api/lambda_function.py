@@ -25,7 +25,7 @@ SERVER_ERR: int = 500
 CLIENT_ERR: int = 400
 IOT_THING_ARN: str = os.environ['iot_arn']
 DOC_SOURCE: str = os.environ['doc_source']
-ENDPOINT: str = os.environ['endpoint']  # for use in iot-jobs-data
+ENDPOINT: str = os.environ['iot_data_jobs_endpoint']
 
 iot_client = boto3.client('iot')
 job_client = boto3.client('iot-jobs-data', endpoint_url=ENDPOINT)
@@ -149,14 +149,14 @@ def poll_job(job_id: str, thing_name: str) -> Tuple[str, str]:
             )
         except iot_client.exceptions.ResourceNotFoundException:
             # job hasn't been fully created yet.
-            sleep(1)
+            sleep(0.1)
             continue
         if resp['execution']['status'] in {'IN_PROGRESS', 'QUEUED'}:
-            sleep(1)
+            sleep(0.1)
         else:
             return (
                 resp['execution']['status'],
-                resp['execution']['statusDetails']['output'],
+                resp['execution']['statusDetails']['detailsMap']['output'],
             )
 
 

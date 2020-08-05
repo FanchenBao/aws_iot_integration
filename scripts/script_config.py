@@ -33,6 +33,6 @@ class ScriptSettings(object):
         return {
             'iot_arn': os.environ['iot_arn'],
             'doc_source': os.environ['doc_source'],
-            'endpoint': os.environ['endpoint'],
+            'iot_data_jobs_endpoint': os.environ['iot_data_jobs_endpoint'],
             'env': self.env,
         }
