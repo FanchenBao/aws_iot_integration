@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 COMMAND_DICTS = frozenset(  # All commands must return str, success or fail
     {
         'version': lambda: settings.version,
+        'greeting': lambda: f'Hello from {settings.sensor_name}',
     }.items(),
 )
 
