@@ -25,8 +25,10 @@ SERVER_ERR: int = 500
 CLIENT_ERR: int = 400
 IOT_THING_ARN: str = os.environ['iot_arn']
 DOC_SOURCE: str = os.environ['doc_source']
+ENDPOINT: str = os.environ['endpoint']  # for use in iot-jobs-data
 
-client = boto3.client('iot')
+iot_client = boto3.client('iot')
+job_client = boto3.client('iot-jobs-data', endpoint_url=ENDPOINT)
 
 
 def error_response(error_msg: str, status_code: int) -> Dict:
@@ -62,12 +64,12 @@ def get_job_id(thing_name: str, status: str):
     next_t: str = 'dummy'
     while next_t:
         if next_t == 'dummy':
-            resp: Dict = client.list_job_executions_for_thing(
+            resp: Dict = iot_client.list_job_executions_for_thing(
                 thingName=thing_name,
                 status=status,
             )
         else:
-            resp = client.list_job_executions_for_thing(
+            resp = iot_client.list_job_executions_for_thing(
                 thingName=thing_name,
                 status=status,
                 nextToken=next_t,
@@ -76,23 +78,44 @@ def get_job_id(thing_name: str, status: str):
         next_t = resp.get('nextToken', '')
 
 
-def delete_unfinished_jobs(thing_name: str) -> None:
-    """Delete all jobs associated with thing_name that has not finished yet.
+def fail_unfinished_jobs(thing_name: str, status: str) -> None:
+    """Fail all jobs associated with thing_name that has not finished yet.
 
     Since previously unfinished jobs will block the execution of future jobs.
     When an API call is made to command the device, we expect the device to
     execute the current command immediately. Therefore, it is necessary to
-    remove all the unfinished jobs previously, including those IN_PROGRESS and
+    fail all the unfinished jobs previously, including those IN_PROGRESS and
     QUEUED.
 
     :param thing_name: Name of the AWS IoT Thing. The target where the jobs are
         associated.
     :type thing_name: str
+    :param status: Status of the job which will force to fail.
+    :type status: str
     """
-    for job_id1 in get_job_id(thing_name, 'IN_PROGRESS'):
-        client.delete_job(jobId=job_id1, force=True)
-    for job_id2 in get_job_id(thing_name, 'QUEUED'):
-        client.delete_job(jobId=job_id2, force=True)
+    for job_id in get_job_id(thing_name, status):
+        job_client.update_job_execution(
+            jobId=job_id,
+            thingName=thing_name,
+            status='FAILED',
+            statusDetails={
+                'fail_reason': (
+                    'Did NOT finish in time. Let it fail so that an incoming '
+                    'new job will not be blocked.'
+                ),
+            },
+        )
+
+
+def fail_in_progress_and_queued_jobs(thing_name: str):
+    """Fail jobs that are still IN_PROGRESS or QUEUED.
+
+    :param thing_name: Name of the AWS IoT Thing. The target where the jobs are
+        associated.
+    :type thing_name: str
+    """
+    fail_unfinished_jobs(thing_name, 'IN_PROGRESS')
+    fail_unfinished_jobs(thing_name, 'QUEUED')
 
 
 def poll_job(job_id: str, thing_name: str) -> Tuple[str, str]:
@@ -120,11 +143,11 @@ def poll_job(job_id: str, thing_name: str) -> Tuple[str, str]:
     """
     while True:
         try:
-            resp: Dict = client.describe_job_execution(
+            resp: Dict = iot_client.describe_job_execution(
                 jobId=job_id,
                 thingName=thing_name,
             )
-        except client.exceptions.ResourceNotFoundException:
+        except iot_client.exceptions.ResourceNotFoundException:
             # job hasn't been fully created yet.
             sleep(1)
             continue
@@ -154,16 +177,16 @@ def lambda_handler(event: Dict, context) -> Dict:
     cmd: str = event['queryStringParameters']['cmd']
 
     try:
-        delete_unfinished_jobs(thing_name)
+        fail_in_progress_and_queued_jobs(thing_name)
     except Exception as err1:
-        error_msg: str = f'Unable to delete unfinished jobs for {thing_name}'
+        error_msg: str = f'Unable to fail IN_PROGRESS jobs for {thing_name}'
         logger.exception(error_msg)
         return error_response(f'{error_msg}. Exception: {err1}', SERVER_ERR)
 
     job_id: str = f'{cmd}-{uuid.uuid4()}'
 
     try:
-        client.create_job(
+        iot_client.create_job(
             jobId=job_id,
             targets=[f'{IOT_THING_ARN}{thing_name}'],
             documentSource=f'{DOC_SOURCE}{cmd}.json',
