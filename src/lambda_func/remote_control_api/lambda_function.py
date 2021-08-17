@@ -1,13 +1,14 @@
 # coding: utf-8
 
-import json
-import logging
 import os
-from time import sleep
-from typing import Dict, List, Tuple
-import uuid
 
 import boto3
+
+import json
+import logging
+import uuid
+from time import sleep
+from typing import Dict, List, Tuple
 
 # set up logger
 logger = logging.getLogger()
@@ -58,7 +59,7 @@ def get_job_id(thing_name: str, status: str):
 
 def fail_in_progress_and_queued_jobs(thing_name: str):
     """Fail jobs that are still IN_PROGRESS or QUEUED.
- 
+
     This is because they will block the execution of a new job. This also means
     that when we want to execute a new command, we must make sure it is OKAY to
     cancel any unfinished jobs in the past.
@@ -98,13 +99,13 @@ def command(thing_names: List[str], cmd: str) -> Dict[str, str]:
             timeoutConfig={'inProgressTimeoutInMinutes': 5},
         )
     except Exception as err:
-        logger.exception(f'{cmd=} FAILED!')
+        logger.exception(f'Command "{cmd}" FAILED!')
         return {
             'jobId': job_id,
-            'message': f'{cmd=} FAILED! ERROR: {err}',
+            'message': f'Command "{cmd}" FAILED! ERROR: {err}',
         }
 
-    return {'jobId': job_id, 'message': f'{cmd=} SUCCEEDED!'}
+    return {'jobId': job_id, 'message': f'Command "{cmd}" SUCCEEDED!'}
 
 
 def respond(thing_name: str, job_id: str, timeout: int) -> Dict[str, str]:
@@ -176,7 +177,7 @@ def cancel(job_id: str, force: bool = True) -> Dict[str, str]:
     except Exception as err1:
         logger.exception(f'Cancel job {job_id} FAILED!')
         return {
-            'message': f'Cancel job {job_id} FAILED! Error details: {err1}' 
+            'message': f'Cancel job {job_id} FAILED! Error details: {err1}',
         }
     status = 'dummy'
     while status != 'CANCELED':  # wait until cancel is complete
@@ -235,7 +236,8 @@ def validate(
             ),
             'verdict': 'FAIL',
         }
-    if act == 'cmd' and ('cmd' not in query_str_params or not multi_val_query_str_params.get('thingNames', [])):
+    thingNames = multi_val_query_str_params.get('thingNames', [])
+    if act == 'cmd' and ('cmd' not in query_str_params or not thingNames):
         resp = {
             'message': (
                 'ERROR: "cmd" or "thingNames" is missing in query string'

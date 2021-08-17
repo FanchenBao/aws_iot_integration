@@ -2,7 +2,7 @@
 
 import logging
 from config import settings
-from logging import handlers
+from logging.handlers import QueueHandler, TimedRotatingFileHandler
 
 
 def output_logger_config(output_logger) -> None:
@@ -15,7 +15,7 @@ def output_logger_config(output_logger) -> None:
     :param output_logger: The output logger.
     """
     # root handlers
-    file_handler = handlers.TimedRotatingFileHandler(
+    file_handler = TimedRotatingFileHandler(
         'app.log', when='midnight', backupCount=6,
     )
     console_handler = logging.StreamHandler()
@@ -45,7 +45,7 @@ def queue_logger_config(queue_logger, queue) -> None:
         output_logger via a queue.
     :param queue: Logger queue, passing LogRecord across processes.
     """
-    queue_handler = logging.handlers.QueueHandler(queue)
+    queue_handler = QueueHandler(queue)
     queue_logger.addHandler(queue_handler)
     if settings.debug:
         queue_logger.setLevel(logging.DEBUG)
