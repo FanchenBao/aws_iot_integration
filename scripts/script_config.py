@@ -31,8 +31,6 @@ class ScriptSettings(object):
         :return: The environment variables as a dict.
         """
         return {
-            'iot_arn': os.environ['iot_arn'],
-            'doc_source': os.environ['doc_source'],
-            'iot_data_jobs_endpoint': os.environ['iot_data_jobs_endpoint'],
-            'env': self.env,
+            'IOT_PREFIX': os.environ['IOT_PREFIX'],
+            'S3_PREFIX': os.environ['S3_PREFIX'],
         }
