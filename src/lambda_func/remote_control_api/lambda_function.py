@@ -313,7 +313,7 @@ def lambda_handler(event, context) -> Dict:
         resp = respond(
             query_str_params['thingName'],
             query_str_params['jobId'],
-            query_str_params.get('timeout', 3),  # default timeout for response
+            int(query_str_params.get('timeout', 3)),  # default timeout
         )
     elif query_str_params['action'] == 'cancel':
         resp = cancel(query_str_params['jobId'])

@@ -19,8 +19,8 @@ flake8 = "*"
 [requires]
 python_version = "3.7"
 
-[packages]
-pydantic = {extras = [ "dotenv",]}
+[packages.pydantic]
+extras = [ "dotenv",]
 
 [scripts]
 update_remote_control_api = "python3 scripts/update_lambda_code.py --func_name remote_control_api --timeout 70 --description 'Handle REST API for remote command-and-response with a specific AWS IoT thing.'"
